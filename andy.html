@@ -1,0 +1,1640 @@
+<!DOCTYPE html>
+<!-- saved from url=(0045)https://s1.sportsplanner.ru/output/archive/21 -->
+<html lang="ru">
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Статистика с фильтрами, сортировкой и цветовой настройкой (демо)</title>
+	<!-- Подключение Bootstrap CSS -->
+	<link href="./andy_files/bootstrap.min.css" rel="stylesheet">
+	<style>
+		body {
+			background-color: #f8f9fa;
+			padding: 20px;
+		}
+
+		/* Стили для прогресс-баров статистики */
+		.progress {
+			height: 28px;
+			margin-bottom: 0;
+		}
+
+		.progress__fill-right {
+			right: 0;
+		}
+
+		.progress__fill-left {
+			left: 0;
+		}
+
+		.progress-bar {
+			font-weight: bold;
+			line-height: 28px;
+		}
+
+		.reverse {
+			direction: rtl;
+		}
+
+		.reverse .progress-bar {
+			text-align: right;
+		}
+
+		.filter-group {
+			margin-bottom: 15px;
+		}
+
+		/* Стили для блока информации о матче */
+		.match-card {
+			background-color: #1f43b7;
+			color: #fff;
+			border-radius: 8px;
+			padding: 15px;
+			margin-bottom: 15px;
+			font-family: sans-serif;
+		}
+
+		.match-card .head-wrapper {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 10px;
+		}
+
+		.match-card .info-wrapper span {
+			font-size: 0.9rem;
+			margin-right: 8px;
+		}
+
+		.match-card .status-wrapper {
+			text-align: right;
+		}
+
+		.match-card .status-wrapper .match-status {
+			background-color: #ffc107;
+			color: #000;
+			padding: 2px 6px;
+			border-radius: 4px;
+			font-size: 0.8rem;
+			display: inline-block;
+			margin-bottom: 2px;
+		}
+
+		.match-card .sets-wrapper {
+			border-top: 1px solid rgba(255, 255, 255, 0.3);
+			padding-top: 10px;
+			margin-bottom: 10px;
+		}
+
+		.match-card .match-detail {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 8px;
+		}
+
+		.match-card .match-detail .players {
+			font-size: 0.85rem;
+		}
+
+		.match-card .score-block {
+			display: flex;
+			align-items: center;
+		}
+
+		.match-card .score-block .score {
+			font-weight: bold;
+			font-size: 1rem;
+			margin-right: 4px;
+		}
+
+		.match-card .score-block .sets {
+			font-size: 0.85rem;
+		}
+
+		.match-card .additional-info p {
+			margin-bottom: 0.3rem;
+			font-size: 0.85rem;
+			color: #fff;
+		}
+
+		.match-card .serving-icon {
+			width: 24px;
+			height: 24px;
+			vertical-align: middle;
+			margin-right: 2px;
+		}
+	</style>
+	<!-- Подключение jQuery и Bootstrap JS -->
+	<script src="./andy_files/jquery-3.6.4.min.js.завантаження"></script>
+	<script src="./andy_files/bootstrap.bundle.min.js.завантаження"></script>
+</head>
+
+<body>
+
+	<style>
+		.progress__fill-right {
+			right: 0;
+			left: auto;
+			direction: rtl;
+			/* Визуально помогает при отладке */
+		}
+
+		.progress-text .text-white-right {
+			color: white;
+			position: absolute;
+			width: 100%;
+			text-align: center;
+			clip-path: inset(0 0 0 33%);
+			/* зеркально от левой версии (0 67% 0 0 -> 0 0 0 33%) */
+		}
+
+		.progress-wrapper {
+			position: relative;
+			height: 28px;
+			background-color: #fff;
+			overflow: hidden;
+		}
+
+		.progress-fill {
+			background-color: #007bff;
+			height: 100%;
+			width: 33%;
+			/* Динамически */
+			position: absolute;
+			top: 0;
+			z-index: 1;
+		}
+
+		.progress-text {
+			position: absolute;
+			top: 0;
+			left: 0;
+			height: 100%;
+			width: 100%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-weight: bold;
+			z-index: 2;
+		}
+
+		.progress-text .text-white {
+			color: white;
+			clip-path: inset(0 67% 0 0);
+			/* 100% - процент */
+			position: absolute;
+			width: 100%;
+			text-align: center;
+		}
+
+		.progress-text .text-black {
+			color: black;
+		}
+	</style>
+
+
+	<script>
+
+
+		$(document).ready(function () {
+
+			table_init();
+			table_update();
+
+			setInterval(table_update, 1000);
+
+
+			function table_init() {
+				// указание кол-ва раундов
+				// $('select#period_select').html('');
+				// $('select#period_select').append('<option>Выбрать период');
+
+
+			}
+
+
+
+			function table_update() {
+
+				var event_id = $('input[name=event_id]').val();
+				// var period   = $('select#period_select').val();
+
+				var period = $('input[name=matchFilter]:checked').val();
+
+
+				var data = {
+					event_id: event_id,
+					period: period
+				};
+
+				$.ajax({
+					url: '/table_update_ajax',
+					type: 'POST',
+					data: data,
+					dataType: 'json',
+					success: function (response) {
+						var team_selectors = {
+							1: 'team_b',
+							2: 'team_c',
+							3: 'team_a',
+							4: 'team_d'
+						};
+
+						var selectors_to_remove = {
+							1: 'team_b',
+							2: 'team_c',
+							3: 'team_a',
+							4: 'team_d'
+						};
+
+						// названия команд
+						if (response['event']['team_1'] != '') {
+							$('td.team_name.' + team_selectors[1]).text(response['event']['team_1']);
+						}
+						if (response['event']['team_2'] != '') {
+							$('td.team_name.' + team_selectors[2]).text(response['event']['team_2']);
+						}
+						if (response['event']['team_3'] != '') {
+							$('td.team_name.' + team_selectors[3]).text(response['event']['team_3']);
+						}
+						if (response['event']['team_4'] != '') {
+							$('td.team_name.' + team_selectors[4]).text(response['event']['team_4']);
+						}
+
+						// количество раундов
+						var round = $('input[name=round]').val();
+						if (response['event']['round'] > round) {
+							$('select#period_select').append('<option value="' + response['event']['round'] + '">раунд ' + response['event']['round'] + '</option>');
+						}
+						$('input[name=round]').val(response['event']['round']);
+
+
+
+						// заполнение параметров
+						$.each(response['team'], function (team_id, v) {
+							delete selectors_to_remove[team_id];
+
+
+							$.each(response['team'][team_id], function (param_number, param) {
+
+								// var value = param['value'] + ' (' + param['percent'] + '%)';							 
+
+								var width = param['percent'];
+
+								if (param['percent'] < 41) {
+									// width = 55;
+								}
+
+
+
+								/*
+								// рабочий вариант							
+								const progress_bar = `
+								<div class="progress-wrapper"> <div class="progress-fill" style="width: ${param['percent']}%;"></div> <div class="progress-text"> <div class="text-white" style="clip-path: inset(0 ${100 - param['percent']}% 0 0);"> ${param['value']} (${param['percent']}%) </div> <div class="text-black"> ${param['value']} (${param['percent']}%) </div> </div> </div>`;
+								*/
+
+								var progress_bar = '';
+
+								if (team_id == 2 || team_id == 4) {
+
+									progress_bar = `
+								<div class="progress-wrapper"> <div class="progress-fill" style="width: ${param['percent']}%;"></div> <div class="progress-text"> <div class="text-white" style="clip-path: inset(0 ${100 - param['percent']}% 0 0);"> (${param['percent']}%) ${param['value']} </div> <div class="text-black"> (${param['percent']}%) ${param['value']} </div> </div> </div>`;
+
+								}
+								else {
+									progress_bar = `
+								<div class="progress-wrapper"> <div class="progress-fill" style="width: ${param['percent']}%;"></div> <div class="progress-text"> <div class="text-white" style="clip-path: inset(0 ${100 - param['percent']}% 0 0);"> ${param['value']} (${param['percent']}%) </div> <div class="text-black"> ${param['value']} (${param['percent']}%) </div> </div> </div>`;
+								}
+
+
+								// alert( 	progress_bar );	
+
+								if (param['value'] > 0) {
+									$('td.' + team_selectors[team_id] + '.param_' + param_number).html(progress_bar);
+								}
+
+							});
+
+						});
+
+						$.each(selectors_to_remove, function (i, selector) {
+							$('td.' + selector).hide();
+						});
+
+
+					},
+					error: function (xhr, status, error) {
+						console.error('Ошибка:', error);
+					}
+				});
+
+			}
+
+			$('select#period_select').change(function () {
+				table_update();
+			});
+
+			$('input[name=matchFilter]').change(function () {
+				$('input[name=matchFilter]').prop('checked', false);
+				$(this).prop('checked', true);
+			});
+
+			$('input[name=playerFilter]').change(function () {
+
+
+				if ($(this).val() == 'all' && $(this).first().prop('checked')) {
+					$('input[name=playerFilter]').prop('checked', false);
+					$(this).prop('checked', true);
+
+
+					$('td.team_a').show();
+					$('td.team_b').show();
+					$('td.team_c').show();
+					$('td.team_d').show();
+
+				}
+				else {
+					$('input[name=playerFilter]').first().prop('checked', false);
+
+
+					if ($('input[name=playerFilter][value=1]').prop('checked')) {
+						$('td.team_b').show();
+					}
+					else {
+						$('td.team_b').hide();
+					}
+
+					if ($('input[name=playerFilter][value=2]').prop('checked')) {
+						$('td.team_c').show();
+					}
+					else {
+						$('td.team_c').hide();
+					}
+
+					if ($('input[name=playerFilter][value=3]').prop('checked')) {
+						$('td.team_a').show();
+					}
+					else {
+						$('td.team_a').hide();
+					}
+
+					if ($('input[name=playerFilter][value=4]').prop('checked')) {
+						$('td.team_d').show();
+					}
+					else {
+						$('td.team_d').hide();
+					}
+
+				}
+
+
+
+			});
+
+
+
+			$('input#progressBarColor').change(function () {
+				alert('test');
+			});
+
+		});
+
+	</script>
+
+
+
+
+
+
+
+	<!-- Скрытые поля для параметров события -->
+	<input type="hidden" name="event_id" value="21">
+	<input type="hidden" name="round" value="2">
+
+	<div class="container-fluid">
+		<div class="row">
+			<!-- Левый блок: Статистика -->
+			<div class="col-md-9">
+				<h4 class="mb-3">Статистика</h4>
+				<table class="table table-striped table-bordered table-hover text-center" id="statsTable">
+					<thead>
+						<tr>
+							<td class="team_a team_name">Данилов</td>
+							<td class="team_b team_name">Халанский</td>
+							<td><b>Показатель</b></td>
+							<td class="team_c team_name">Иванов</td>
+							<td class="team_d team_name">Колганов</td>
+						</tr>
+					</thead>
+
+					<tbody id="metricsBody">
+
+
+						<tr>
+							<td class="team_a param_1">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 82%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 18% 0 0);"> 28 (82%) </div>
+										<div class="text-black"> 28 (82%) </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_b param_1">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 82%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 18% 0 0);"> 31 (82%) </div>
+										<div class="text-black"> 31 (82%) </div>
+									</div>
+								</div>
+							</td>
+							<td>Первые подачи</td>
+							<td class="team_c param_1">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 84%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 16%);"> (84%) 21 </div>
+										<div class="text-black"> (84%) 21 </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_d param_1">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 78%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 22%);"> (78%) 28 </div>
+										<div class="text-black"> (78%) 28 </div>
+									</div>
+								</div>
+							</td>
+						</tr>
+
+
+						<tr>
+							<td class="team_a param_2"></td>
+							<td class="team_b param_2">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 3%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 97% 0 0);"> 1 (3%) </div>
+										<div class="text-black"> 1 (3%) </div>
+									</div>
+								</div>
+							</td>
+							<td>ВСЕГО ЭЙСОВ</td>
+							<td class="team_c param_2"></td>
+							<td class="team_d param_2"></td>
+						</tr>
+
+
+						<tr>
+							<td class="team_a param_3">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 18%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 82% 0 0);"> 6 (18%) </div>
+										<div class="text-black"> 6 (18%) </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_b param_3">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 16%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 84% 0 0);"> 6 (16%) </div>
+										<div class="text-black"> 6 (16%) </div>
+									</div>
+								</div>
+							</td>
+							<td>Вторые подачи</td>
+							<td class="team_c param_3">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 16%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 84%);"> (16%) 4 </div>
+										<div class="text-black"> (16%) 4 </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_d param_3">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 22%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 78%);"> (22%) 8 </div>
+										<div class="text-black"> (22%) 8 </div>
+									</div>
+								</div>
+							</td>
+						</tr>
+
+
+						<tr>
+							<td class="team_a param_4"></td>
+							<td class="team_b param_4"></td>
+							<td>Двойные ошибки</td>
+							<td class="team_c param_4"></td>
+							<td class="team_d param_4"></td>
+						</tr>
+
+
+						<tr>
+							<td class="team_a param_5"></td>
+							<td class="team_b param_5">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 43%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 57% 0 0);"> 3 (43%) </div>
+										<div class="text-black"> 3 (43%) </div>
+									</div>
+								</div>
+							</td>
+							<td>ПОДАЧА Т-зона</td>
+							<td class="team_c param_5">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 33%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 67%);"> (33%) 1 </div>
+										<div class="text-black"> (33%) 1 </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_d param_5"></td>
+						</tr>
+
+
+						<tr>
+							<td class="team_a param_6">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 83%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 17% 0 0);"> 5 (83%) </div>
+										<div class="text-black"> 5 (83%) </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_b param_6">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 29%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 71% 0 0);"> 2 (29%) </div>
+										<div class="text-black"> 2 (29%) </div>
+									</div>
+								</div>
+							</td>
+							<td>Середина квадрата</td>
+							<td class="team_c param_6">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 67%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 33%);"> (67%) 2 </div>
+										<div class="text-black"> (67%) 2 </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_c param_6">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 67%;"></div>
+									<div class="progress-text">
+										<div class="text-white-right" style="clip-path: inset(0 0 0 33%);"> (67%) 2 </div>
+										<div class="text-black"> (67%) 2 </div>
+									</div>
+								</div>
+							</td>
+
+						</tr>
+
+
+						<tr>
+							<td class="team_a param_7">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 17%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 83% 0 0);"> 1 (17%) </div>
+										<div class="text-black"> 1 (17%) </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_b param_7">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 29%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 71% 0 0);"> 2 (29%) </div>
+										<div class="text-black"> 2 (29%) </div>
+									</div>
+								</div>
+							</td>
+							<td>Подача в ширину</td>
+							<td class="team_c param_7"></td>
+							<td class="team_d param_7">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 33%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 67%);"> (33%) 1 </div>
+										<div class="text-black"> (33%) 1 </div>
+									</div>
+								</div>
+							</td>
+						</tr>
+
+
+						<tr>
+							<td class="team_a param_8">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 33%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 67% 0 0);"> 3 (33%) </div>
+										<div class="text-black"> 3 (33%) </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_b param_8">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 57%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 43% 0 0);"> 4 (57%) </div>
+										<div class="text-black"> 4 (57%) </div>
+									</div>
+								</div>
+							</td>
+							<td>Слева</td>
+							<td class="team_c param_8">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 56%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 44%);"> (56%) 9 </div>
+										<div class="text-black"> (56%) 9 </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_d param_8">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 78%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 22%);"> (78%) 7 </div>
+										<div class="text-black"> (78%) 7 </div>
+									</div>
+								</div>
+							</td>
+						</tr>
+
+
+						<tr>
+							<td class="team_a param_9">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 67%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 33% 0 0);"> 6 (67%) </div>
+										<div class="text-black"> 6 (67%) </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_b param_9">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 43%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 57% 0 0);"> 3 (43%) </div>
+										<div class="text-black"> 3 (43%) </div>
+									</div>
+								</div>
+							</td>
+							<td>Справа</td>
+							<td class="team_c param_9">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 44%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 56%);"> (44%) 7 </div>
+										<div class="text-black"> (44%) 7 </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_d param_9">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 22%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 78%);"> (22%) 2 </div>
+										<div class="text-black"> (22%) 2 </div>
+									</div>
+								</div>
+							</td>
+						</tr>
+
+
+						<tr>
+							<td class="team_a param_10"></td>
+							<td class="team_b param_10"></td>
+							<td>(Реверс, твиннер)</td>
+							<td class="team_c param_10"></td>
+							<td class="team_d param_10"></td>
+						</tr>
+
+
+						<tr>
+							<td class="team_a param_11"></td>
+							<td class="team_b param_11">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 50%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 50% 0 0);"> 1 (50%) </div>
+										<div class="text-black"> 1 (50%) </div>
+									</div>
+								</div>
+							</td>
+							<td>Удары слета</td>
+							<td class="team_c param_11">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 50%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 50%);"> (50%) 1 </div>
+										<div class="text-black"> (50%) 1 </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_d param_11"></td>
+						</tr>
+
+
+						<tr>
+							<td class="team_a param_12"></td>
+							<td class="team_b param_12"></td>
+							<td>Смеш</td>
+							<td class="team_c param_12"></td>
+							<td class="team_d param_12"></td>
+						</tr>
+
+
+						<tr>
+							<td class="team_a param_13">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 100%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0% 0 0);"> 1 (100%) </div>
+										<div class="text-black"> 1 (100%) </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_b param_13">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 50%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 50% 0 0);"> 1 (50%) </div>
+										<div class="text-black"> 1 (50%) </div>
+									</div>
+								</div>
+							</td>
+							<td>Лоб</td>
+							<td class="team_c param_13">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 50%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 50%);"> (50%) 1 </div>
+										<div class="text-black"> (50%) 1 </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_d param_13">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 100%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 0%);"> (100%) 1 </div>
+										<div class="text-black"> (100%) 1 </div>
+									</div>
+								</div>
+							</td>
+						</tr>
+
+
+						<tr>
+							<td class="team_a param_14"></td>
+							<td class="team_b param_14"></td>
+							<td>Удар с отскока</td>
+							<td class="team_c param_14"></td>
+							<td class="team_d param_14"></td>
+						</tr>
+
+
+						<tr>
+							<td class="team_a param_15">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 100%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0% 0 0);"> 13 (100%) </div>
+										<div class="text-black"> 13 (100%) </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_b param_15">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 100%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0% 0 0);"> 19 (100%) </div>
+										<div class="text-black"> 19 (100%) </div>
+									</div>
+								</div>
+							</td>
+							<td>Игра в атаке</td>
+							<td class="team_c param_15">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 100%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 0%);"> (100%) 6 </div>
+										<div class="text-black"> (100%) 6 </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_d param_15">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 100%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 0%);"> (100%) 11 </div>
+										<div class="text-black"> (100%) 11 </div>
+									</div>
+								</div>
+							</td>
+						</tr>
+
+
+						<tr>
+							<td class="team_a param_16"></td>
+							<td class="team_b param_16"></td>
+							<td>Игра в защите</td>
+							<td class="team_c param_16"></td>
+							<td class="team_d param_16"></td>
+						</tr>
+
+
+						<tr>
+							<td class="team_a param_17"></td>
+							<td class="team_b param_17"></td>
+							<td>Пассивная игра</td>
+							<td class="team_c param_17"></td>
+							<td class="team_d param_17"></td>
+						</tr>
+
+
+						<tr>
+							<td class="team_a param_18">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 50%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 50% 0 0);"> 1 (50%) </div>
+										<div class="text-black"> 1 (50%) </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_b param_18">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 38%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 62% 0 0);"> 3 (38%) </div>
+										<div class="text-black"> 3 (38%) </div>
+									</div>
+								</div>
+							</td>
+							<td>Удары по линии</td>
+							<td class="team_c param_18">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 60%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 40%);"> (60%) 3 </div>
+										<div class="text-black"> (60%) 3 </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_d param_18"></td>
+						</tr>
+
+
+						<tr>
+							<td class="team_a param_19">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 50%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 50% 0 0);"> 1 (50%) </div>
+										<div class="text-black"> 1 (50%) </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_b param_19">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 25%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 75% 0 0);"> 2 (25%) </div>
+										<div class="text-black"> 2 (25%) </div>
+									</div>
+								</div>
+							</td>
+							<td>Удары кроссом</td>
+							<td class="team_c param_19">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 20%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 80%);"> (20%) 1 </div>
+										<div class="text-black"> (20%) 1 </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_d param_19"></td>
+						</tr>
+
+
+						<tr>
+							<td class="team_a param_20"></td>
+							<td class="team_b param_20">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 38%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 62% 0 0);"> 3 (38%) </div>
+										<div class="text-black"> 3 (38%) </div>
+									</div>
+								</div>
+							</td>
+							<td>Удары от стены</td>
+							<td class="team_c param_20">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 20%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 80%);"> (20%) 1 </div>
+										<div class="text-black"> (20%) 1 </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_d param_20">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 100%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 0%);"> (100%) 1 </div>
+										<div class="text-black"> (100%) 1 </div>
+									</div>
+								</div>
+							</td>
+						</tr>
+
+
+						<tr>
+							<td class="team_a param_21">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 22%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 78% 0 0);"> 2 (22%) </div>
+										<div class="text-black"> 2 (22%) </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_b param_21">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 55%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 45% 0 0);"> 6 (55%) </div>
+										<div class="text-black"> 6 (55%) </div>
+									</div>
+								</div>
+							</td>
+							<td>Вынужденные ошибки</td>
+							<td class="team_c param_21">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 65%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 35%);"> (65%) 11 </div>
+										<div class="text-black"> (65%) 11 </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_d param_21">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 58%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 42%);"> (58%) 7 </div>
+										<div class="text-black"> (58%) 7 </div>
+									</div>
+								</div>
+							</td>
+						</tr>
+
+
+						<tr>
+							<td class="team_a param_22">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 78%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 22% 0 0);"> 7 (78%) </div>
+										<div class="text-black"> 7 (78%) </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_b param_22">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 45%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 55% 0 0);"> 5 (45%) </div>
+										<div class="text-black"> 5 (45%) </div>
+									</div>
+								</div>
+							</td>
+							<td>Невынужденые ошибки</td>
+							<td class="team_c param_22">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 35%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 65%);"> (35%) 6 </div>
+										<div class="text-black"> (35%) 6 </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_d param_22">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 42%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 58%);"> (42%) 5 </div>
+										<div class="text-black"> (42%) 5 </div>
+									</div>
+								</div>
+							</td>
+						</tr>
+
+
+						<tr>
+							<td class="team_a param_23">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 52%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 48% 0 0);"> 13 (52%) </div>
+										<div class="text-black"> 13 (52%) </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_b param_23">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 55%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 45% 0 0);"> 22 (55%) </div>
+										<div class="text-black"> 22 (55%) </div>
+									</div>
+								</div>
+							</td>
+							<td>Количество попаданий в корт</td>
+							<td class="team_c param_23">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 23%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 77%);"> (23%) 8 </div>
+										<div class="text-black"> (23%) 8 </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_d param_23">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 27%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 73%);"> (27%) 10 </div>
+										<div class="text-black"> (27%) 10 </div>
+									</div>
+								</div>
+							</td>
+						</tr>
+
+
+						<tr>
+							<td class="team_a param_24">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 28%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 72% 0 0);"> 7 (28%) </div>
+										<div class="text-black"> 7 (28%) </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_b param_24">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 23%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 77% 0 0);"> 9 (23%) </div>
+										<div class="text-black"> 9 (23%) </div>
+									</div>
+								</div>
+							</td>
+							<td>Количество ошибок</td>
+							<td class="team_c param_24">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 26%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 74%);"> (26%) 9 </div>
+										<div class="text-black"> (26%) 9 </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_d param_24">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 32%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 68%);"> (32%) 12 </div>
+										<div class="text-black"> (32%) 12 </div>
+									</div>
+								</div>
+							</td>
+						</tr>
+
+
+						<tr>
+							<td class="team_a param_25">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 16%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 84% 0 0);"> 4 (16%) </div>
+										<div class="text-black"> 4 (16%) </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_b param_25">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 20%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 80% 0 0);"> 8 (20%) </div>
+										<div class="text-black"> 8 (20%) </div>
+									</div>
+								</div>
+							</td>
+							<td>Мячи сыгранные в аут</td>
+							<td class="team_c param_25">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 37%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 63%);"> (37%) 13 </div>
+										<div class="text-black"> (37%) 13 </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_d param_25">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 38%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 62%);"> (38%) 14 </div>
+										<div class="text-black"> (38%) 14 </div>
+									</div>
+								</div>
+							</td>
+						</tr>
+
+
+						<tr>
+							<td class="team_a param_26">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 4%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 96% 0 0);"> 1 (4%) </div>
+										<div class="text-black"> 1 (4%) </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_b param_26">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-left" style="width: 3%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 97% 0 0);"> 1 (3%) </div>
+										<div class="text-black"> 1 (3%) </div>
+									</div>
+								</div>
+							</td>
+							<td>Мячи сыгранные в сетку</td>
+							<td class="team_c param_26">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 14%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 86%);"> (14%) 5 </div>
+										<div class="text-black"> (14%) 5 </div>
+									</div>
+								</div>
+							</td>
+							<td class="team_d param_26">
+								<div class="progress-wrapper">
+									<div class="progress-fill progress__fill-right" style="width: 3%;"></div>
+									<div class="progress-text">
+										<div class="text-white" style="clip-path: inset(0 0 0 97%);"> (3%) 1 </div>
+										<div class="text-black"> (3%) 1 </div>
+									</div>
+								</div>
+							</td>
+						</tr>
+
+
+					</tbody>
+				</table>
+			</div>
+
+			<!-- Правый блок: Информация о матче + Фильтры -->
+			<div class="col-md-3">
+				<!-- Блок информации о матче -->
+				<div class="match-card mb-3" data-testid="match-card">
+					<div class="head-wrapper">
+						<div class="info-wrapper">
+							<span class="matchCard_info__Ee8vt">
+								<span class="matchCard_infoElement__KFmfT">Match 3</span>
+								<span class="matchCard_infoElement__KFmfT">1h 1m</span>
+							</span>
+						</div>
+						<div class="status-wrapper">
+							<div class="matchStatus_matchStatus__j0klH" data-testid="match-status">Livestream</div>
+							<span class="matchCard_state__aQEQy">In Progress</span>
+						</div>
+					</div>
+					<div class="sets-wrapper">
+						<div class="match-detail" data-testid="match-detail">
+							<span class="matchDetail_players__fudfj">
+								<span class="matchDetail_player__8bFid">Zoziya Kardava</span>
+								<span class="matchDetail_player__8bFid">Oksana Kalashnikova</span>
+							</span>
+							<div class="score-block" data-testid="score-block">
+								<span class="scoreIdentifier_scoreIdentifier__rlk_V scoreIdentifier_points__g2Uou"
+									data-testid="score-identifier">0</span>
+								<span class="sets">
+									<span class="scoreIdentifier_scoreIdentifier__rlk_V" data-testid="score-identifier">2</span>
+									<span class="scoreIdentifier_scoreIdentifier__rlk_V" data-testid="score-identifier">6</span>
+									<span class="scoreIdentifier_scoreIdentifier__rlk_V" data-testid="score-identifier">0</span>
+								</span>
+							</div>
+						</div>
+						<div class="match-detail" data-testid="match-detail">
+							<span class="matchDetail_players__fudfj">
+								<span class="matchDetail_player__8bFid">Malene Helgo</span>
+								<span class="matchDetail_player__8bFid">Astrid Wanja Brune Olsen</span>
+							</span>
+							<div class="score-block" data-testid="score-block">
+								<span class="matchCard_serving__H9Qgg">
+									<svg class="serving-icon" width="24" height="24" viewBox="0 0 24 24" fill="none"
+										xmlns="http://www.w3.org/2000/svg">
+										<circle cx="12" cy="12" r="4" fill="currentColor"></circle>
+									</svg>
+								</span>
+								<span class="scoreIdentifier_scoreIdentifier__rlk_V scoreIdentifier_points__g2Uou"
+									data-testid="score-identifier">0</span>
+								<span class="sets">
+									<span class="scoreIdentifier_scoreIdentifier__rlk_V" data-testid="score-identifier">6</span>
+									<span class="scoreIdentifier_scoreIdentifier__rlk_V" data-testid="score-identifier">4</span>
+									<span class="scoreIdentifier_scoreIdentifier__rlk_V" data-testid="score-identifier">0</span>
+								</span>
+							</div>
+						</div>
+					</div>
+					<div class="additional-info mt-3">
+						<p><strong>Продолжительность:</strong> 2:15</p>
+						<p><strong>Раунд:</strong> 3</p>
+						<p><strong>Судья:</strong> Иванов</p>
+						<p><strong>Турнир:</strong> Открытый Кубок</p>
+					</div>
+				</div>
+
+				<!-- Блок с фильтрами -->
+				<div class="card">
+					<div class="card-header">Фильтры</div>
+					<div class="card-body">
+						<!-- Фильтр выбора игроков -->
+						<div class="filter-group">
+							<label class="form-label">Игроки:</label><br>
+							<div class="form-check form-check-inline">
+								<input class="form-check-input" type="checkbox" name="playerFilter" id="filterPlayerAll" value="all"
+									checked="">
+								<label class="form-check-label" for="filterPlayerAll">Все</label>
+							</div>
+							<div class="form-check form-check-inline">
+								<input class="form-check-input" type="checkbox" name="playerFilter" id="filterPlayer1" value="1">
+								<label class="form-check-label" for="filterPlayer1">1</label>
+							</div>
+							<div class="form-check form-check-inline">
+								<input class="form-check-input" type="checkbox" name="playerFilter" id="filterPlayer2" value="2">
+								<label class="form-check-label" for="filterPlayer2">2</label>
+							</div>
+
+
+							<div class="form-check form-check-inline">
+								<input class="form-check-input" type="checkbox" name="playerFilter" id="filterPlayer3" value="3">
+								<label class="form-check-label" for="filterPlayer3">3</label>
+							</div>
+
+
+
+
+							<div class="form-check form-check-inline">
+								<input class="form-check-input" type="checkbox" name="playerFilter" id="filterPlayer4" value="4">
+								<label class="form-check-label" for="filterPlayer4">4</label>
+							</div>
+
+
+						</div>
+						<!-- Фильтр выбора партий -->
+						<div class="filter-group">
+							<label class="form-label">Партии:</label><br>
+							<div class="form-check form-check-inline">
+								<input class="form-check-input" type="checkbox" name="matchFilter" id="filterMatchTotal" value="total"
+									checked="">
+								<label class="form-check-label" for="filterMatchTotal">Все</label>
+							</div>
+
+
+							<div class="form-check form-check-inline">
+								<input class="form-check-input" type="checkbox" name="matchFilter" id="filterMatch1" value="1">
+								<label class="form-check-label" for="filterMatch1">1</label>
+							</div>
+
+
+							<div class="form-check form-check-inline">
+								<input class="form-check-input" type="checkbox" name="matchFilter" id="filterMatch1" value="2">
+								<label class="form-check-label" for="filterMatch1">2</label>
+							</div>
+
+
+						</div>
+						<!-- Фильтр режима отображения -->
+						<div class="filter-group">
+							<label class="form-label">Режим отображения:</label><br>
+							<div class="form-check form-check-inline">
+								<input class="form-check-input" type="checkbox" name="displayMode" id="displayPlayers" value="players"
+									checked="">
+								<label class="form-check-label" for="displayPlayers">По игрокам</label>
+							</div>
+							<div class="form-check form-check-inline">
+								<input class="form-check-input" type="checkbox" name="displayMode" id="displayTeams" value="teams">
+								<label class="form-check-label" for="displayTeams">По командам</label>
+							</div>
+						</div>
+						<!-- Фильтр сортировки -->
+						<div class="filter-group">
+							<label class="form-label">Сортировка по:</label><br>
+							<div class="form-check form-check-inline">
+								<input class="form-check-input" type="checkbox" name="sortFilter" id="sortDefault" value="default"
+									checked="">
+								<label class="form-check-label" for="sortDefault">По умолчанию</label>
+							</div>
+							<div class="form-check form-check-inline">
+								<input class="form-check-input" type="checkbox" name="sortFilter" id="sortServe" value="serve">
+								<label class="form-check-label" for="sortServe">По подаче</label>
+							</div>
+							<div class="form-check form-check-inline">
+								<input class="form-check-input" type="checkbox" name="sortFilter" id="sortReception" value="reception">
+								<label class="form-check-label" for="sortReception">По приему</label>
+							</div>
+							<div class="form-check form-check-inline">
+								<input class="form-check-input" type="checkbox" name="sortFilter" id="sortShots" value="shots">
+								<label class="form-check-label" for="sortShots">По ударам</label>
+							</div>
+						</div>
+						<!-- Новый блок: Цветовая настройка -->
+						<div class="filter-group">
+							<label class="form-label">Цветовая настройка:</label><br>
+							<label for="cellColor" class="form-label">Фон ячеек:</label>
+							<input type="color" id="cellColor" value="#ffffff" class="form-control form-control-color mb-2"
+								title="Выберите цвет фона ячеек">
+							<label for="progressBarColor" class="form-label">Цвет прогресс-бара:</label>
+							<input type="color" id="progressBarColor" value="#007bff" class="form-control form-control-color"
+								title="Выберите цвет прогресс-бара">
+						</div>
+						<!-- Кнопка применения фильтров -->
+						<button id="applyFilters" class="btn btn-primary w-100">Применить фильтры</button>
+					</div>
+				</div>
+			</div>
+		</div> <!-- /.row -->
+	</div> <!-- /.container-fluid -->
+
+	<script>
+
+		var demo_init = 0;
+
+		if (demo_init) {
+			// демо-данные
+
+			var demoData = {
+				total: {
+					event: { team_1: "Команда 1", team_2: "Команда 2", team_3: "Команда 3", team_4: "Команда 4", round: 3 },
+					team: {
+						"1": { "1": { value: 65, percent: 65 }, "2": { value: 50, percent: 50 }, "3": { value: 20, percent: 20 }, "4": { value: 8, percent: 8 }, "5": { value: 55, percent: 55 }, "6": { value: 60, percent: 60 }, "7": { value: 45, percent: 45 }, "8": { value: 35, percent: 35 }, "9": { value: 50, percent: 50 }, "10": { value: 30, percent: 30 } },
+						"2": { "1": { value: 70, percent: 70 }, "2": { value: 60, percent: 60 }, "3": { value: 18, percent: 18 }, "4": { value: 10, percent: 10 }, "5": { value: 65, percent: 65 }, "6": { value: 62, percent: 62 }, "7": { value: 40, percent: 40 }, "8": { value: 30, percent: 30 }, "9": { value: 55, percent: 55 }, "10": { value: 25, percent: 25 } },
+						"3": { "1": { value: 60, percent: 60 }, "2": { value: 55, percent: 55 }, "3": { value: 22, percent: 22 }, "4": { value: 9, percent: 9 }, "5": { value: 50, percent: 50 }, "6": { value: 58, percent: 58 }, "7": { value: 48, percent: 48 }, "8": { value: 38, percent: 38 }, "9": { value: 52, percent: 52 }, "10": { value: 28, percent: 28 } },
+						"4": { "1": { value: 55, percent: 55 }, "2": { value: 45, percent: 45 }, "3": { value: 24, percent: 24 }, "4": { value: 7, percent: 7 }, "5": { value: 45, percent: 45 }, "6": { value: 54, percent: 54 }, "7": { value: 42, percent: 42 }, "8": { value: 36, percent: 36 }, "9": { value: 50, percent: 50 }, "10": { value: 32, percent: 32 } }
+					}
+				},
+				match1: {
+					event: { team_1: "Команда 1", team_2: "Команда 2", team_3: "Команда 3", team_4: "Команда 4", round: 3 },
+					team: {
+						"1": { "1": { value: 68, percent: 68 }, "2": { value: 52, percent: 52 }, "3": { value: 21, percent: 21 }, "4": { value: 9, percent: 9 }, "5": { value: 57, percent: 57 }, "6": { value: 63, percent: 63 }, "7": { value: 47, percent: 47 }, "8": { value: 37, percent: 37 }, "9": { value: 53, percent: 53 }, "10": { value: 31, percent: 31 } },
+						"2": { "1": { value: 72, percent: 72 }, "2": { value: 63, percent: 63 }, "3": { value: 17, percent: 17 }, "4": { value: 11, percent: 11 }, "5": { value: 67, percent: 67 }, "6": { value: 64, percent: 64 }, "7": { value: 39, percent: 39 }, "8": { value: 28, percent: 28 }, "9": { value: 56, percent: 56 }, "10": { value: 26, percent: 26 } },
+						"3": { "1": { value: 63, percent: 63 }, "2": { value: 57, percent: 57 }, "3": { value: 23, percent: 23 }, "4": { value: 10, percent: 10 }, "5": { value: 52, percent: 52 }, "6": { value: 60, percent: 60 }, "7": { value: 50, percent: 50 }, "8": { value: 40, percent: 40 }, "9": { value: 54, percent: 54 }, "10": { value: 29, percent: 29 } },
+						"4": { "1": { value: 58, percent: 58 }, "2": { value: 42, percent: 42 }, "3": { value: 26, percent: 26 }, "4": { value: 8, percent: 8 }, "5": { value: 47, percent: 47 }, "6": { value: 56, percent: 56 }, "7": { value: 44, percent: 44 }, "8": { value: 35, percent: 35 }, "9": { value: 51, percent: 51 }, "10": { value: 33, percent: 33 } }
+					}
+				},
+				match2: {
+					event: { team_1: "Команда 1", team_2: "Команда 2", team_3: "Команда 3", team_4: "Команда 4", round: 3 },
+					team: {
+						"1": { "1": { value: 64, percent: 64 }, "2": { value: 48, percent: 48 }, "3": { value: 19, percent: 19 }, "4": { value: 7, percent: 7 }, "5": { value: 54, percent: 54 }, "6": { value: 59, percent: 59 }, "7": { value: 43, percent: 43 }, "8": { value: 33, percent: 33 }, "9": { value: 49, percent: 49 }, "10": { value: 29, percent: 29 } },
+						"2": { "1": { value: 69, percent: 69 }, "2": { value: 55, percent: 55 }, "3": { value: 17, percent: 17 }, "4": { value: 9, percent: 9 }, "5": { value: 64, percent: 64 }, "6": { value: 60, percent: 60 }, "7": { value: 38, percent: 38 }, "8": { value: 28, percent: 28 }, "9": { value: 54, percent: 54 }, "10": { value: 24, percent: 24 } },
+						"3": { "1": { value: 59, percent: 59 }, "2": { value: 53, percent: 53 }, "3": { value: 21, percent: 21 }, "4": { value: 8, percent: 8 }, "5": { value: 49, percent: 49 }, "6": { value: 57, percent: 57 }, "7": { value: 46, percent: 46 }, "8": { value: 36, percent: 36 }, "9": { value: 51, percent: 51 }, "10": { value: 27, percent: 27 } },
+						"4": { "1": { value: 54, percent: 54 }, "2": { value: 44, percent: 44 }, "3": { value: 23, percent: 23 }, "4": { value: 6, percent: 6 }, "5": { value: 44, percent: 44 }, "6": { value: 52, percent: 52 }, "7": { value: 40, percent: 40 }, "8": { value: 34, percent: 34 }, "9": { value: 48, percent: 48 }, "10": { value: 30, percent: 30 } }
+					}
+				},
+				match3: {
+					event: { team_1: "Команда 1", team_2: "Команда 2", team_3: "Команда 3", team_4: "Команда 4", round: 3 },
+					team: {
+						"1": { "1": { value: 67, percent: 67 }, "2": { value: 51, percent: 51 }, "3": { value: 20, percent: 20 }, "4": { value: 9, percent: 9 }, "5": { value: 56, percent: 56 }, "6": { value: 61, percent: 61 }, "7": { value: 46, percent: 46 }, "8": { value: 36, percent: 36 }, "9": { value: 52, percent: 52 }, "10": { value: 30, percent: 30 } },
+						"2": { "1": { value: 71, percent: 71 }, "2": { value: 62, percent: 62 }, "3": { value: 19, percent: 19 }, "4": { value: 11, percent: 11 }, "5": { value: 66, percent: 66 }, "6": { value: 63, percent: 63 }, "7": { value: 41, percent: 41 }, "8": { value: 31, percent: 31 }, "9": { value: 57, percent: 57 }, "10": { value: 26, percent: 26 } },
+						"3": { "1": { value: 62, percent: 62 }, "2": { value: 56, percent: 56 }, "3": { value: 23, percent: 23 }, "4": { value: 10, percent: 10 }, "5": { value: 51, percent: 51 }, "6": { value: 59, percent: 59 }, "7": { value: 49, percent: 49 }, "8": { value: 39, percent: 39 }, "9": { value: 53, percent: 53 }, "10": { value: 29, percent: 29 } },
+						"4": { "1": { value: 56, percent: 56 }, "2": { value: 46, percent: 46 }, "3": { value: 25, percent: 25 }, "4": { value: 8, percent: 8 }, "5": { value: 47, percent: 47 }, "6": { value: 55, percent: 55 }, "7": { value: 43, percent: 43 }, "8": { value: 37, percent: 37 }, "9": { value: 50, percent: 50 }, "10": { value: 32, percent: 32 } }
+					}
+				}
+			};
+
+			// Функция вычисления среднего по выбранным партиям
+			function averageMatches(matchArray) {
+				var result = {
+					event: demoData.total.event,
+					team: {}
+				};
+				var count = matchArray.length;
+				for (var teamId in demoData.total.team) {
+					result.team[teamId] = {};
+					for (var param = 1; param <= 10; param++) {
+						var sumValue = 0, sumPercent = 0;
+						matchArray.forEach(function (matchKey) {
+							var paramData = demoData[matchKey].team[teamId][param];
+							sumValue += paramData.value;
+							sumPercent += paramData.percent;
+						});
+						result.team[teamId][param] = {
+							value: Math.round(sumValue / count),
+							percent: Math.round(sumPercent / count)
+						};
+					}
+				}
+				return result;
+			}
+
+			// Функция сортировки строк метрик
+			function sortMetricsRows(sortOption) {
+				if (sortOption === "default" || sortOption === "reception") return;
+
+				var categoryMapping = {
+					"Первые подачи": "serve",
+					"ВСЕГО ЭЙСОВ": "serve",
+					"Вторые подачи": "serve",
+					"Двойные ошибки": "serve",
+					"ПОДАЧА Т‑зона": "serve",
+					"Подача в ширину": "serve",
+					"Середина квадрата": "shots",
+					"Слева": "shots",
+					"Справа": "shots",
+					"Другие удары": "shots"
+				};
+
+				var rows = $("#metricsBody tr").get();
+
+				rows.sort(function (a, b) {
+					var textA = $(a).find("td:nth-child(3)").text().trim();
+					var textB = $(b).find("td:nth-child(3)").text().trim();
+					var rankA = (categoryMapping[textA] === sortOption) ? 1 : 2;
+					var rankB = (categoryMapping[textB] === sortOption) ? 1 : 2;
+					return rankA - rankB;
+				});
+
+				$.each(rows, function (index, row) {
+					$("#metricsBody").append(row);
+				});
+			}
+
+			// Функция обновления таблицы с учетом фильтров, сортировки и режима отображения
+			function updateTable() {
+				// Получаем выбранные партии
+				var selectedMatches = [];
+				$('input[name="matchFilter"]:checked').each(function () {
+					selectedMatches.push($(this).val());
+				});
+				var data;
+				if (selectedMatches.includes("total") || selectedMatches.length === 0) {
+					data = demoData.total;
+				} else {
+					data = averageMatches(selectedMatches);
+				}
+
+				var selectedPlayers = [];
+				$('input[name="playerFilter"]:checked').each(function () {
+					selectedPlayers.push($(this).val());
+				});
+				if (selectedPlayers.includes("all") || selectedPlayers.length === 0) {
+					selectedPlayers = ["1", "2", "3", "4"];
+				}
+
+				// Получаем выбранный режим отображения: players или teams
+				var displayMode = $('input[name="displayMode"]:checked').val();
+
+				// Считываем цвета из фильтров
+				var cellBgColor = $('#cellColor').val() || "#ffffff";
+				var progressBarColor = $('#progressBarColor').val() || "#007bff";
+
+				if (displayMode === "teams") {
+					// Режим "По командам": объединяем данные:
+					var leftTeamName = data.event.team_1 + " / " + data.event.team_3;
+					var rightTeamName = data.event.team_2 + " / " + data.event.team_4;
+					var headerRow = $("#statsTable thead tr").eq(1);
+					headerRow.find("td").eq(0).html(leftTeamName).attr("colspan", 2);
+					headerRow.find("td").eq(1).hide();
+					headerRow.find("td").eq(2).html("Показатель");
+					headerRow.find("td").eq(3).html(rightTeamName).attr("colspan", 2);
+					headerRow.find("td").eq(4).hide();
+
+					// Обновляем данные для каждой строки: вычисляем среднее для левой и правой сторон
+					$("#metricsBody tr").each(function (index) {
+						var paramNumber = index + 1;
+						var leftValue = Math.round((data.team["1"][paramNumber].value + data.team["3"][paramNumber].value) / 2);
+						var leftPercent = Math.round((data.team["1"][paramNumber].percent + data.team["3"][paramNumber].percent) / 2);
+						var leftText = leftValue + " (" + leftPercent + "%)";
+
+						var rightValue = Math.round((data.team["2"][paramNumber].value + data.team["4"][paramNumber].value) / 2);
+						var rightPercent = Math.round((data.team["2"][paramNumber].percent + data.team["4"][paramNumber].percent) / 2);
+						var rightText = rightValue + " (" + rightPercent + "%)";
+
+						var cells = $(this).find("td");
+						$(cells[0]).html(
+							'<div class="progress" style="background-color:' + cellBgColor + ';">' +
+							'<div class="progress-bar" role="progressbar" style="width:' + leftPercent + '%; background-color:' + progressBarColor + ';" aria-valuenow="' + leftPercent + '" aria-valuemin="0" aria-valuemax="100">' + leftText + '</div>' +
+							'</div>'
+						).show();
+						$(cells[1]).hide();
+						// Ячейка с показателем остаётся
+						$(cells[3]).html(
+							'<div class="progress reverse" style="background-color:' + cellBgColor + ';">' +
+							'<div class="progress-bar" role="progressbar" style="width:' + rightPercent + '%; background-color:' + progressBarColor + ';" aria-valuenow="' + rightPercent + '" aria-valuemin="0" aria-valuemax="100">' + rightText + '</div>' +
+							'</div>'
+						).show();
+						$(cells[4]).hide();
+					});
+				} else {
+					// Режим "По игрокам": сбрасываем colspan и показываем все ячейки
+					var headerRow = $("#statsTable thead tr").eq(1);
+					headerRow.find("td").eq(0).removeAttr("colspan").show();
+					headerRow.find("td").eq(1).show();
+					headerRow.find("td").eq(3).removeAttr("colspan").show();
+					headerRow.find("td").eq(4).show();
+
+					var team_selectors = { "1": "team_b", "2": "team_c", "3": "team_a", "4": "team_d" };
+
+					if (data.event.team_1 !== '') { $('td.team_name.team_b').text(data.event.team_1).show(); }
+					if (data.event.team_2 !== '') { $('td.team_name.team_c').text(data.event.team_2).show(); }
+					if (data.event.team_3 !== '') { $('td.team_name.team_a').text(data.event.team_3).show(); }
+					if (data.event.team_4 !== '') { $('td.team_name.team_d').text(data.event.team_4).show(); }
+
+					for (var id in team_selectors) {
+						var selector = team_selectors[id];
+						$('td.' + selector).show();
+						for (var param_number = 1; param_number <= 10; param_number++) {
+							var param = data.team[id][param_number];
+							if (param) {
+								var value_text = param.value + " (" + param.percent + "%)";
+								var percent = param.percent;
+								var cellSelector = 'td.' + selector + '.param_' + param_number;
+								if (selector === "team_c" || selector === "team_d") {
+									$(cellSelector).html(
+										'<div class="progress reverse" style="background-color:' + cellBgColor + ';">' +
+										'<div class="progress-bar" role="progressbar" style="width:' + percent + '%; background-color:' + progressBarColor + ';" aria-valuenow="' + percent + '" aria-valuemin="0" aria-valuemax="100">' + value_text + '</div>' +
+										'</div>'
+									);
+								} else {
+									$(cellSelector).html(
+										'<div class="progress" style="background-color:' + cellBgColor + ';">' +
+										'<div class="progress-bar" role="progressbar" style="width:' + percent + '%; background-color:' + progressBarColor + ';" aria-valuenow="' + percent + '" aria-valuemin="0" aria-valuemax="100">' + value_text + '</div>' +
+										'</div>'
+									);
+								}
+							}
+						}
+					}
+				}
+
+				var sortOption = $('input[name="sortFilter"]:checked').val();
+				sortMetricsRows(sortOption);
+			}
+
+			// Ограничиваем выбор в группах "sortFilter" и "displayMode" – разрешается выбрать только один чекбокс
+			$(document).ready(function () {
+				$('input[name="sortFilter"]').click(function () {
+					$('input[name="sortFilter"]').not(this).prop('checked', false);
+				});
+				$('input[name="displayMode"]').click(function () {
+					$('input[name="displayMode"]').not(this).prop('checked', false);
+				});
+			});
+
+			$(document).ready(function () {
+				updateTable();
+				$('#applyFilters').click(function () {
+					updateTable();
+				});
+				setInterval(updateTable, 1000);
+			});
+		}
+
+	</script>
+
+
+</body>
+
+</html>
